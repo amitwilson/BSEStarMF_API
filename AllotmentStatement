@@ -1,0 +1,40 @@
+// Docs: https://www.bsestarmf.in/StarMFWebService/StarMFWebService.svc/help/operations/AllotmentStatement
+// Google Apps Script, Javascript
+
+function getAllotmentStatus() {
+  var url = 'https://www.bsestarmf.in/StarMFWebService/StarMFWebService.svc/AllotmentStatement';
+  
+  var data = {"ClientCode"  : "Suresh53",     // Client code as set up in BSE Star for your client
+              "Filler1"     : "",
+              "Filler2"     : "",
+              "Filler3"     : "",
+              "FromDate"    : "01/01/2000",   // Format DD/MM/YY. Does not need to be order date or even the start of the period containing the order date
+              "MemberCode"  : "00000",        // Your BSE Star member code
+              "OrderNo"     : "1919191919",   // Order number
+              "OrderStatus" : "",             // Empty
+              "OrderType"   : "",             // Empty
+              "Password"    : "notEncrypted", // The password associated with the UserID. NOT the encrypted password
+              "SettType"    : "",             // Empty
+              "SubOrderType": "NRM",          // Required
+              "ToDate"      : "01/01/2000",   // Format DD/MM/YY. Does not need to be order date or even the end of the period containing the order date
+              "UserId"      : "0000001"       // BSE Star MF UserID
+             }
+  
+  var options = {
+    'method' : 'post',
+    'contentType': 'application/json',
+    'payload' : JSON.stringify(data)
+  };
+  
+  var r = UrlFetchApp.fetch(url, options);
+  
+  // Parse JSON and log values as key-value pairs
+  r = JSON.parse(r);
+  r = r.AllotmentDetails[0];
+  var keys = Object.keys(r);
+  for (var k in keys) {
+    var e = keys[k];
+    var value = r[e];
+    Logger.log([e, value]);
+  }
+}
