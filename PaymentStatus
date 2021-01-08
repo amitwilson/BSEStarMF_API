@@ -1,0 +1,88 @@
+/*
+Doc: https://www.bsestarmf.in/StarMFWebService/StarMFWebService.svc/help/operations/MFAPI
+Endpoint: https://www.bsestarmf.in/StarMFWebService/StarMFWebService.svc/MFAPI?Flag={FLAG}&UserId={USERID}&EncryptedPassword={ENCRYPTEDPASSWORD}&param={PARAM}
+
+Flags:
+01 FATCA UPLOAD
+02 UCC – MFD
+03 PAYMENT GATEWAY
+04 CHANGE PASSWORD
+05 UCC – MFI
+06 MANDATE REGISTRATION
+07 STP REGISTRATION
+08 SWP REGISTRATION
+11 CLIENT ORDER PAYMENT STATUS
+12 CLIENT REDEMPTION SMS AUTHENTICATION
+13 CKYC UPLOAD
+14 MANDATE STATUS
+15 SYSTEMATIC PLAN AUTHENTICATION
+
+Params: 
+"ClientCode|OrderNo|Segment"
+
+Segment:
+BSEMF- when MF Order is placed
+SGB- when SGB order is placed [What is SGB order?]
+*/
+
+
+/*
+Generate Passkey. 
+Passkey length 10 characters. No special charecters.
+https://stackoverflow.com/questions/9719570/generate-random-password-string-with-requirements-in-javascript/9719815
+*/
+
+function generatePasskey_() {
+  var check = true;
+  while (check) {
+    var passKey = Math.random().toString(36).slice(-10); 
+    check = (passKey.indexOf('.') > -1) ? true : false; // To avoid a key with a dot. 
+  }
+  return passKey;
+}
+
+/*
+Get encrypted password
+Docs: https://www.bsestarmf.in/StarMFWebService/StarMFWebService.svc/help/operations/getPassword
+Endpoint: Url: https://www.bsestarmf.in/StarMFWebService/StarMFWebService.svc/getPassword/{USERID}/{MEMBERID}/{PASSWORD}/{PASSKEY}
+*/
+
+function getPassword_() {
+  var userID   = '0000000'; // Your BSE Star User ID
+  var memberID = '00000';   // Your BSE Star Member ID
+  var password = 'secret';  // password for your BSE Star User ID
+  var passKey  = generatePasskey_();
+  var url      = 'https://www.bsestarmf.in/StarMFWebService/StarMFWebService.svc/getPassword'
+  url          = [url, userID, memberID, password, passKey].join('/');
+  
+  var options = {
+    'method' : 'post',
+    'payload' : ''
+  };
+  var r = UrlFetchApp.fetch(url, options);
+  r = JSON.parse(r);
+  r = r.split("|");
+  return r[1];
+}
+
+/*
+Get Order Payment Status
+*/
+function getOrderPaymentStatus() {
+  var clientCode = 'Suresh53';     // Client code in BSE Star MF
+  var orderNum   = '19191919';     // BSE Star Order number
+  var pwd        = getPassword_(); // Encrypted password
+  var PARAM      = encodeURIComponent(clientCode+'|'+ orderNum + '|BSEMF'); // Pipes need to be encoded
+  var url        = 'https://www.bsestarmf.in/StarMFWebService/StarMFWebService.svc/MFAPI?'
+  url           += 'Flag=11&UserId=X&EncryptedPassword=' + pwd + '&param=' + PARAM; // Does not seem to use UserId param.
+
+  var options = {
+    'method' : 'post',
+    'payload' : '' // Empty payload
+  };
+  var r = UrlFetchApp.fetch(url, options);
+  r = JSON.parse(r);
+  r = r.split("|");
+  Logger.log('Status: '  + r[0]);
+  Logger.log('Message: ' + r[1]);  
+}
